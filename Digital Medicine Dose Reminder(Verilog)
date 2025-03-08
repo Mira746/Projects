@@ -1,0 +1,77 @@
+`timescale 1ns / 1ps
+module DigitalBabyDoseReminder (
+ input clk,
+ input reset,
+ input start_stopwatch,
+ input set_alarm,
+ input reset_alarm,
+ input [4:0] alarm_hour,
+ input [5:0] alarm_minute,
+ output reg [5:0] seconds,
+ output reg [5:0] minutes,
+ output reg [4:0] hours,
+ output reg [5:0] stopwatch_seconds,
+ output reg [5:0] stopwatch_minutes,
+ output reg alarm_triggered
+);
+ reg stopwatch_running;
+ // Timekeeping - Digital Clock
+ always @(posedge clk or posedge reset) begin
+ if (reset) begin
+ seconds <= 0;
+ minutes <= 0;
+ hours <= 0;
+ end else begin
+ if (seconds < 59)
+ seconds <= seconds + 1;
+ else begin
+ seconds <= 0;
+ if (minutes < 59)
+ minutes <= minutes + 1;
+ else begin
+ minutes <= 0;
+ if (hours < 23)
+ hours <= hours + 1;
+ else
+ hours <= 0;
+ end
+ end
+ end
+ end
+ // Stopwatch functionality
+ always @(posedge clk or posedge reset) begin
+ if (reset) begin
+ stopwatch_seconds <= 0;
+ stopwatch_minutes <= 0;
+ stopwatch_running <= 0;
+ end else if (start_stopwatch) begin
+ stopwatch_running <= 1;
+ end
+ if (stopwatch_running) begin
+ if (stopwatch_seconds < 59)
+ stopwatch_seconds <= stopwatch_seconds + 1;
+ else begin
+ stopwatch_seconds <= 0;
+ if (stopwatch_minutes < 59)
+ stopwatch_minutes <= stopwatch_minutes + 1;
+ else
+ stopwatch_minutes <= 0;
+ end
+ end
+ end
+ // Alarm functionality
+ always @(posedge clk) begin
+ if (reset_alarm) begin
+ alarm_triggered <= 0;
+ // Reset stopwatch when alarm is reset
+ stopwatch_seconds <= 0;
+ stopwatch_minutes <= 0;
+ stopwatch_running <= 0; // Stop the stopwatch when alarm is reset
+ end else if (set_alarm) begin
+ if (hours == alarm_hour && minutes == alarm_minute)
+ alarm_triggered <= 1;
+ else
+ alarm_triggered <= 0;
+ end
+ end
+endmodule
