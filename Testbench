@@ -1,0 +1,64 @@
+`timescale 1ns / 1ps
+module Testbench;
+ reg clk;
+ reg reset;
+ reg start_stopwatch;
+ reg set_alarm;
+ reg reset_alarm;
+ reg [4:0] alarm_hour;
+ reg [5:0] alarm_minute;
+ wire [5:0] seconds;
+ wire [5:0] minutes;
+ wire [4:0] hours;
+ wire [5:0] stopwatch_seconds;
+ wire [5:0] stopwatch_minutes;
+ wire alarm_triggered;
+ // Instantiate the main module
+ DigitalBabyDoseReminder uut (
+ .clk(clk),
+ .reset(reset),
+ .start_stopwatch(start_stopwatch),
+ .set_alarm(set_alarm),
+ .reset_alarm(reset_alarm),
+ .alarm_hour(alarm_hour),
+ .alarm_minute(alarm_minute),
+ .seconds(seconds),
+ .minutes(minutes),
+ .hours(hours),
+ .stopwatch_seconds(stopwatch_seconds),
+ .stopwatch_minutes(stopwatch_minutes),
+ .alarm_triggered(alarm_triggered)
+ );
+ // Clock generation
+ initial begin
+ clk = 0;
+ forever #5 clk = ~clk; // 100 MHz clock frequency simulation
+ end
+ // Test sequence
+ initial begin
+ // Initial reset
+ reset = 1;
+ start_stopwatch = 0;
+ set_alarm = 0;
+ reset_alarm = 0;
+ alarm_hour = 0;
+ alarm_minute = 1; // Set alarm at 00:01
+ #10 reset = 0; // Release reset
+ // Test timekeeping and alarm
+ #100 set_alarm = 1; // Enable the alarm
+ // Start stopwatch
+ #10 start_stopwatch = 1;
+ // Wait some time and reset alarm
+ #1000 reset_alarm = 1; // This will reset the alarm and stopwatch
+ #10 reset_alarm = 0;
+ // Stop simulation
+ #10000 $stop;
+ end
+ // Monitor outputs
+ initial begin
+ $monitor("Time: %02d:%02d:%02d, Stopwatch: %02d:%02d, Alarm
+Triggered: %b",
+ hours, minutes, seconds, stopwatch_minutes, stopwatch_seconds,
+alarm_triggered);
+ end
+endmodule
